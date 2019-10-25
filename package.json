@@ -1,0 +1,30 @@
+{
+  "name": "openapi-ts",
+  "version": "0.1.0",
+  "description": "openapi-ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "build-release": "tsc -p tsconfig.release.json",
+    "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "lint": "tslint -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^12.11.2",
+    "commander": "^3.0.2",
+    "prettier": "^1.18.2",
+    "tslint": "^5.20.0",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.6.4"
+  },
+  "files": [
+    "lib/**/*"
+  ],
+  "bin": {
+    "openapi-ts": "./lib/index.js"
+  },
+  "dependencies": {
+    "swagger-parser": "^8.0.2"
+  }
+}
