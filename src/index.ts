@@ -3,24 +3,16 @@ import { parse } from 'swagger-parser';
 import * as fs from 'fs';
 import * as path from 'path';
 import { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
-import * as program from 'commander';
-program.version('0.0.1');
 
-program.option('-i, --input <file>', 'Json file with spec');
-program.option('-o, --output <file>', 'Json file with spec');
-program.parse(process.argv);
-
-run(program.input, program.output)
-
-const enums: Enum = {};
+const enums: { [key: string]: Enum } = {};
 interface Enum {
-  [key: string]: string[];
+  [key: string]: any;
 }
 
-function run(input: string, output: string) {
+export function generate(input: string, output: string) {
   const inputPath = path.isAbsolute(input) ? input : `${process.cwd()}/${input}`
   const outputPath = path.isAbsolute(output) ? output : `${process.cwd()}/${output}`
-  parse(inputPath).then(
+  return parse(inputPath).then(
     r => {
       let ts = '';
       Object.values((r as any)
@@ -35,26 +27,33 @@ function run(input: string, output: string) {
         }
         console.log('The file was saved!');
       })
+      return ts;
     },
     e => {
       console.log(e);
     },
   );
 }
-function printEnums(enums: Enum) {
-  return Object.keys(enums).map(enumkey => {
-    return `\nexport enum ${camelCase(enumkey)}Enum {${
-      enums[enumkey].map(key => (`\n    ${key} = '${key}'`))
-    }\n}`;
+
+function printEnums(interfaces: { [key: string]: Enum }) {
+  return Object.keys(interfaces).map((interfaceKey) => {
+    return `\nexport namespace ${interfaceKey} {${
+        Object.keys(interfaces[interfaceKey]).map(enumkey => {
+              return `\n\texport enum ${camelCase(enumkey)}Enum {${
+                interfaces[interfaceKey][enumkey].map((key: string) => (`\n\t    ${key} = '${key}'`))
+              }\n\t}`;
+            }).join('')
+        }\n}`;
   }).join('');
 }
+
 function printObject(object: OpenAPIV2.SchemaObject) {
   return `export interface ${object.title} {${
     object.properties ?
       Object.keys(object.properties).map(propertyKey => {
         if (object.properties) {
           const property = object.properties[propertyKey];
-          return printProperty(property, propertyKey) + ';';
+          return printProperty(property, propertyKey, object.title || '') + ';';
         }
       }).join('')
       : ''
@@ -64,6 +63,7 @@ function printObject(object: OpenAPIV2.SchemaObject) {
 function printProperty(
   property: OpenAPIV2.SchemaObject,
   propertyKey: string,
+  interfaceName: string
 ): string {
   switch (property.type) {
     case 'object':
@@ -89,8 +89,11 @@ function printProperty(
       return `\n    ${propertyKey}?: any[]`
     case 'string':
       if (property.enum) {
-        enums[propertyKey] = property.enum;
-        return `\n    ${propertyKey}?: ${camelCase(propertyKey)}Enum`;
+        enums[interfaceName] = { 
+          ...(enums[interfaceName] !== undefined ? enums[interfaceName] : {}),
+          [propertyKey]: property.enum
+        };
+        return `\n    ${propertyKey}?: ${interfaceName}.${camelCase(propertyKey)}Enum`;
       } else {
         return `\n    ${propertyKey}?: ${property.type}`;
       }

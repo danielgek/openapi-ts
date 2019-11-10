@@ -1,6 +1,6 @@
 {
   "name": "openapi-ts",
-  "version": "0.1.0",
+  "version": "0.2.3",
   "description": "openapi-ts",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -22,7 +22,7 @@
     "lib/**/*"
   ],
   "bin": {
-    "openapi-ts": "./lib/index.js"
+    "openapi-ts": "./lib/cli/cli.js"
   },
   "dependencies": {
     "swagger-parser": "^8.0.2"
