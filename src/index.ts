@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { parse } from 'swagger-parser';
+import { parse } from '@apidevtools/swagger-parser';
 import * as fs from 'fs';
 import * as path from 'path';
 import { OpenAPIV2, OpenAPIV3 } from 'openapi-types';
@@ -10,14 +10,20 @@ interface Enum {
 }
 
 export function generate(input: string, output: string) {
-  const inputPath = path.isAbsolute(input) ? input : `${process.cwd()}/${input}`
-  const outputPath = path.isAbsolute(output) ? output : `${process.cwd()}/${output}`
+  const inputPath = path.isAbsolute(input)
+    ? input
+    : `${process.cwd()}/${input}`;
+  const outputPath = path.isAbsolute(output)
+    ? output
+    : `${process.cwd()}/${output}`;
   return parse(inputPath).then(
-    r => {
+    (r) => {
+      debugger;
       let ts = '';
-      Object.values((r as any)
-        .definitions as OpenAPIV2.DefinitionsObject).forEach(entity => {
-        ts += printObject(entity);
+      Object.keys(
+        (r as any).definitions as OpenAPIV2.DefinitionsObject,
+      ).forEach((key) => {
+        ts += printObject({ ...(r as any).definitions[key], title: key });
       });
       ts = `${ts} ${printEnums(enums)}`;
 
@@ -26,44 +32,58 @@ export function generate(input: string, output: string) {
           return console.log(err);
         }
         console.log('The file was saved!');
-      })
+      });
       return ts;
     },
-    e => {
+    (e) => {
       console.log(e);
     },
   );
 }
 
 function printEnums(interfaces: { [key: string]: Enum }) {
-  return Object.keys(interfaces).map((interfaceKey) => {
-    return `\nexport namespace ${interfaceKey} {${
-        Object.keys(interfaces[interfaceKey]).map(enumkey => {
-              return `\n\texport enum ${camelCase(enumkey)}Enum {${
-                interfaces[interfaceKey][enumkey].map((key: string) => (`\n\t    ${key} = '${key}'`))
-              }\n\t}`;
-            }).join('')
-        }\n}`;
-  }).join('');
+  return Object.keys(interfaces)
+    .map((interfaceKey) => {
+      return `\nexport namespace ${interfaceKey} {${Object.keys(
+        interfaces[interfaceKey],
+      )
+        .map((enumkey) => {
+          if (typeof interfaces[interfaceKey][enumkey] !== 'string') {
+            return `\n\texport type ${camelCase(enumkey)}Enum = ${interfaces[
+              interfaceKey
+            ][enumkey].map((key: string, index: number, arr: []) => `'${key}'${index !== arr.length - 1 && ' |' || ';'}`).join(' ')}`
+          }
+          return `\n\texport enum ${camelCase(enumkey)}Enum {${interfaces[
+            interfaceKey
+          ][enumkey].map((key: string) => `\n\t    ${key} = '${key}'`)}\n\t}`;
+        })
+        .join('')}\n}`;
+    })
+    .join('');
 }
 
 function printObject(object: OpenAPIV2.SchemaObject) {
-  return `export interface ${object.title} {${
-    object.properties ?
-      Object.keys(object.properties).map(propertyKey => {
-        if (object.properties) {
-          const property = object.properties[propertyKey];
-          return printProperty(property, propertyKey, object.title || '') + ';';
-        }
-      }).join('')
+  debugger;
+  return `export interface ${object.title?.replace(/[^a-z0-9+]+/gi, '')} {${
+    object.properties
+      ? Object.keys(object.properties)
+          .map((propertyKey) => {
+            if (object.properties) {
+              const property = object.properties[propertyKey];
+              return (
+                printProperty(property, propertyKey, object.title || '') + ';'
+              );
+            }
+          })
+          .join('')
       : ''
-    }\n}\n`;
+  }\n}\n`;
 }
 
 function printProperty(
   property: OpenAPIV2.SchemaObject,
   propertyKey: string,
-  interfaceName: string
+  interfaceName: string,
 ): string {
   switch (property.type) {
     case 'object':
@@ -74,7 +94,7 @@ function printProperty(
           return `\n    ${propertyKey}?: ${getTypeFromRef(ref)}`;
         }
       }
-      return `\n    ${propertyKey}?: any`
+      return `\n    ${propertyKey}?: any`;
     case 'integer':
       return `\n    ${propertyKey}?: number`;
     case 'array':
@@ -83,17 +103,21 @@ function printProperty(
           return `\n    ${propertyKey}?: ${property.items.type}[]`;
         }
         if (property.items.$ref) {
-          return `\n    ${propertyKey}?: ${getTypeFromRef(property.items.$ref)}[]`;
+          return `\n    ${propertyKey}?: ${getTypeFromRef(
+            property.items.$ref,
+          )}[]`;
         }
       }
-      return `\n    ${propertyKey}?: any[]`
+      return `\n    ${propertyKey}?: any[]`;
     case 'string':
       if (property.enum) {
-        enums[interfaceName] = { 
+        enums[interfaceName] = {
           ...(enums[interfaceName] !== undefined ? enums[interfaceName] : {}),
-          [propertyKey]: property.enum
+          [propertyKey]: property.enum,
         };
-        return `\n    ${propertyKey}?: ${interfaceName}.${camelCase(propertyKey)}Enum`;
+        return `\n    ${propertyKey}?: ${interfaceName}.${camelCase(
+          propertyKey,
+        )}Enum`;
       } else {
         return `\n    ${propertyKey}?: ${property.type}`;
       }
@@ -118,6 +142,5 @@ function getTypeFromRef(ref: string): string {
 }
 
 function camelCase(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase()
+  return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 }
-
