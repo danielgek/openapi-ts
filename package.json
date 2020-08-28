@@ -1,9 +1,20 @@
 {
   "name": "openapi-ts",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "openapi-ts",
   "main": "lib/src/index.js",
   "types": "lib/src/index.d.ts",
+  "homepage": "https://github.com/danielgek/openapi-ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/danielgek/openapi-ts"
+  },
+  "keywords": [
+    "web",
+    "typescript",
+    "swagger",
+    "openapi"
+  ],
   "scripts": {
     "build": "tsc",
     "build-release": "tsc -p tsconfig.release.json",
