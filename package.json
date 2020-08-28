@@ -1,15 +1,15 @@
 {
   "name": "openapi-ts",
-  "version": "0.2.3",
+  "version": "0.3.2",
   "description": "openapi-ts",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "lib/src/index.js",
+  "types": "lib/src/index.d.ts",
   "scripts": {
     "build": "tsc",
     "build-release": "tsc -p tsconfig.release.json",
     "format": "prettier --write \"src/**/*.ts\" \"src/**/*.js\"",
     "lint": "tslint -p tsconfig.json",
-    "test": "node ./lib/cli/cli.js -i ./test/api.json -o ./test/gen.d.ts"
+    "test": "NODE_TLS_REJECT_UNAUTHORIZED=0 node ./test/index.js"
   },
   "devDependencies": {
     "@types/node": "^14.0.27",
@@ -23,7 +23,7 @@
     "lib/**/*"
   ],
   "bin": {
-    "openapi-ts": "./lib/cli/cli.js"
+    "openapi-ts": "./lib/src/cli/cli.js"
   },
   "dependencies": {
     "@apidevtools/swagger-parser": "^10.0.1"
