@@ -1,6 +1,6 @@
 {
   "name": "openapi-ts",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "openapi-ts",
   "main": "lib/src/index.js",
   "types": "lib/src/index.d.ts",

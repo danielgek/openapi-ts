@@ -2,7 +2,7 @@
 import * as program from 'commander';
 import { generate } from '..';
 import * as path from 'path';
-program.version('0.3.3');
+program.version('0.3.4');
 
 program.option('-i, --input <file>', 'Json file with spec');
 program.option('-o, --output <file>', 'Json file with spec');
